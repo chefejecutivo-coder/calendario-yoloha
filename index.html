@@ -6,7 +6,6 @@
 <title>YOLOHA GO - CALENDARIO</title>
 
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -29,12 +28,11 @@ h2{
     border-radius:12px;
 }
 
-/* colores visibles */
+/* eventos legibles */
 .fc-event {
     color: white !important;
     font-weight: bold;
     border: none !important;
-    padding: 2px;
 }
 </style>
 
@@ -46,17 +44,17 @@ h2{
 
 <div id="calendar"></div>
 
-<!-- MODAL -->
-<div class="modal fade" id="eventoModal" tabindex="-1">
+<!-- MODAL SIMPLE Y ESTABLE -->
+<div class="modal fade" id="modalEvento" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
 
       <div class="modal-header">
-        <h5 class="modal-title">Detalle Evento</h5>
+        <h5 class="modal-title">Detalle del Evento</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
-      <div class="modal-body" id="detalleEvento" style="white-space:pre-line;"></div>
+      <div class="modal-body" id="contenidoEvento" style="white-space:pre-line;"></div>
 
     </div>
   </div>
@@ -82,12 +80,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(r => r.json())
                 .then(data => {
 
-                    const eventos = data.map(item => {
+                    const eventos = data.map(e => {
 
-                        let servicio = (item.servicio || '')
-                            .toString()
+                        let servicio = (e.servicio || "")
                             .toUpperCase()
-                            .replace(/\|/g, '')
+                            .replace(/\|/g, "")
                             .trim();
 
                         let color = "#6c757d";
@@ -97,57 +94,43 @@ document.addEventListener('DOMContentLoaded', function () {
                         else if (servicio.includes("CENA")) color = "#6f42c1";
                         else if (servicio.includes("PASABOCAS")) color = "#fd7e14";
                         else if (servicio.includes("DESAYUNO")) color = "#20c997";
-                        else if (servicio.includes("TARDE JUEGOS")) color = "#ffc107";
+                        else if (servicio.includes("TARDE")) color = "#ffc107";
 
-                        let pack = parseInt(item.pack || 0);
+                        let pack = parseInt(e.pack || 0);
                         if (pack >= 100) color = "#dc3545";
 
                         return {
-                            title: (item.cliente || '') + " - " + servicio,
-                            start: item.date,
+                            title: `${e.cliente} - ${servicio}`,
+                            start: e.date,
                             backgroundColor: color,
                             borderColor: color,
-                            extendedProps: item
+                            extendedProps: e
                         };
                     });
 
                     successCallback(eventos);
                 })
                 .catch(err => {
-                    console.log("ERROR JSON:", err);
+                    console.log("ERROR JSON", err);
                     failureCallback(err);
                 });
-
         },
 
         eventClick: function(info) {
 
             const e = info.event.extendedProps;
 
-            // 🔥 descripción vertical
+            // descripción vertical REAL
             let descripcion = (e.descripcion || "")
                 .split("|")
                 .map(x => x.trim())
-                .filter(x => x)
+                .filter(Boolean)
                 .join("\n");
 
-            // 🔥 área vertical
-            let area = (e.area || "")
-                .split("|")
-                .map(x => x.trim())
-                .filter(x => x)
-                .join("\n");
+            // hora (si viene decimal)
+            let hora = e.hora || "";
 
-            // 🔥 hora decimal → hora real
-            let hora = "";
-            if (e.hora) {
-                let h = parseFloat(e.hora) * 24;
-                let hh = Math.floor(h);
-                let mm = Math.round((h - hh) * 60);
-                hora = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
-            }
-
-            document.getElementById("detalleEvento").innerText =
+            let texto =
 `CLIENTE: ${e.cliente}
 SERVICIO: ${e.servicio}
 LUGAR: ${e.lugar}
@@ -157,13 +140,12 @@ HORA: ${hora}
 DESCRIPCIÓN:
 ${descripcion}
 
-ÁREA:
-${area}
-
 OBSERVACIONES:
-${e.observaciones || ''}`;
+${e.observaciones || ""}`;
 
-            new bootstrap.Modal(document.getElementById('eventoModal')).show();
+            document.getElementById("contenidoEvento").innerText = texto;
+
+            new bootstrap.Modal(document.getElementById('modalEvento')).show();
         }
 
     });
