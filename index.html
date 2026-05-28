@@ -1,43 +1,125 @@
-events: function(fetchInfo, successCallback, failureCallback) {
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YOLOHA GO - CALENDARIO</title>
 
-    fetch('./events.json')
-        .then(response => response.json())
-        .then(data => {
+<!-- FullCalendar -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
-            let eventos = data.map(item => {
-
-                // LIMPIEZA SEGURA
-                let servicio = (item.servicio || "")
-                    .toString()
-                    .toUpperCase()
-                    .replace(/\|/g, "")
-                    .trim();
-
-                let color = "#6c757d";
-
-                if (servicio.includes("REFRIGERIO")) color = "#0d6efd";
-                else if (servicio.includes("ALMUERZO")) color = "#198754";
-                else if (servicio.includes("CENA")) color = "#6f42c1";
-                else if (servicio.includes("PASABOCAS")) color = "#fd7e14";
-                else if (servicio.includes("DESAYUNO")) color = "#20c997";
-                else if (servicio.includes("TARDE JUEGOS")) color = "#ffc107";
-
-                let pack = parseInt(item.pack || 0);
-                if (pack >= 100) color = "#dc3545";
-
-                return {
-                    title: item.cliente + " - " + item.servicio,
-                    start: item.date,
-                    backgroundColor: color,
-                    borderColor: color,
-                    extendedProps: item
-                };
-            });
-
-            successCallback(eventos);
-        })
-        .catch(error => {
-            console.log("ERROR JSON:", error);
-            failureCallback(error);
-        });
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#eef2f7;
+    padding:20px;
 }
+
+.topbar{
+    background:#111827;
+    color:white;
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:15px;
+}
+
+#calendar{
+    background:white;
+    padding:15px;
+    border-radius:12px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="topbar">
+    <h2>YOLOHA GO - CALENDARIO OPERATIVO</h2>
+</div>
+
+<div id="calendar"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    var calendarEl = document.getElementById('calendar');
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+
+        initialView: 'dayGridMonth',
+        locale: 'es',
+        height: 'auto',
+
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth'
+        },
+
+        events: function(fetchInfo, successCallback, failureCallback) {
+
+            fetch('./events.json')
+                .then(res => res.json())
+                .then(data => {
+
+                    let eventos = data.map(item => {
+
+                        let servicio = (item.servicio || "").toUpperCase().trim();
+
+                        let color = "#6c757d";
+
+                        if (servicio.includes("REFRIGERIO")) color = "#0d6efd";
+                        else if (servicio.includes("ALMUERZO")) color = "#198754";
+                        else if (servicio.includes("CENA")) color = "#6f42c1";
+                        else if (servicio.includes("PASABOCAS")) color = "#fd7e14";
+                        else if (servicio.includes("DESAYUNO")) color = "#20c997";
+                        else if (servicio.includes("TARDE JUEGOS")) color = "#ffc107";
+
+                        let pack = parseInt(item.pack || 0);
+                        if (pack >= 100) color = "#dc3545";
+
+                        return {
+                            title: item.cliente + " - " + item.servicio,
+                            start: item.date,
+                            backgroundColor: color,
+                            borderColor: color,
+                            extendedProps: item
+                        };
+
+                    });
+
+                    console.log("EVENTOS CARGADOS:", eventos);
+                    successCallback(eventos);
+                })
+                .catch(err => {
+                    console.log("ERROR JSON:", err);
+                    failureCallback(err);
+                });
+
+        },
+
+        eventClick: function(info) {
+
+            let e = info.event.extendedProps;
+
+            alert(
+                "CLIENTE: " + e.cliente + "\n" +
+                "SERVICIO: " + e.servicio + "\n" +
+                "LUGAR: " + e.lugar + "\n" +
+                "PAX: " + e.pack + "\n" +
+                "HORA: " + e.hora + "\n\n" +
+                "DESCRIPCIÓN:\n" + e.descripcion
+            );
+        }
+
+    });
+
+    calendar.render();
+
+});
+</script>
+
+</body>
+</html>
