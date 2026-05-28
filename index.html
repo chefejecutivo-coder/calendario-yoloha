@@ -65,6 +65,30 @@ document.addEventListener('DOMContentLoaded', function () {
         // 👇 AQUÍ ESTÁ LA CONEXIÓN CON TU JSON
         events: function(fetchInfo, successCallback, failureCallback) {
 
+    fetch('./events.json')
+        .then(response => response.json())
+        .then(data => {
+
+            let eventos = data.map(item => {
+
+                return {
+                    title: item.cliente + " - " + item.servicio,
+                    start: item.date
+                };
+
+            });
+
+            console.log("EVENTOS CARGADOS:", eventos);
+
+            successCallback(eventos);
+        })
+        .catch(error => {
+            console.log("ERROR JSON:", error);
+            failureCallback(error);
+        });
+
+} {
+
             fetch('./events.json')
                 .then(response => response.json())
                 .then(data => {
