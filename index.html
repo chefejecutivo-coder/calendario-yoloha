@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>YOLOHA CALENDARIO</title>
+<title>YOLOHA GO - CALENDARIO</title>
 
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
@@ -13,6 +13,14 @@ body{
     font-family:Arial;
     background:#eef2f7;
     padding:20px;
+}
+
+.topbar{
+    background:#111827;
+    color:white;
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:15px;
 }
 
 #calendar{
@@ -26,7 +34,9 @@ body{
 
 <body>
 
-<h2>YOLOHA GO - CALENDARIO OPERATIVO</h2>
+<div class="topbar">
+    <h2>YOLOHA GO - CALENDARIO OPERATIVO</h2>
+</div>
 
 <div id="calendar"></div>
 
@@ -50,10 +60,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(r => r.json())
                 .then(data => {
 
-                    const eventos = data.map(e => ({
-                        title: (e.cliente || '') + " - " + (e.servicio || ''),
-                        start: e.date
-                    }));
+                    const eventos = data.map(e => {
+
+                        let servicio = (e.servicio || "").toUpperCase().trim();
+
+                        let color = "#6c757d";
+
+                        if (servicio.includes("REFRIGERIO")) color = "#0d6efd";
+                        else if (servicio.includes("ALMUERZO")) color = "#198754";
+                        else if (servicio.includes("CENA")) color = "#6f42c1";
+                        else if (servicio.includes("PASABOCAS")) color = "#fd7e14";
+                        else if (servicio.includes("DESAYUNO")) color = "#20c997";
+                        else if (servicio.includes("TARDE JUEGOS")) color = "#ffc107";
+
+                        let pack = parseInt(e.pack || 0);
+                        if (pack >= 100) color = "#dc3545";
+
+                        return {
+                            title: (e.cliente || '') + " - " + (e.servicio || ''),
+                            start: e.date,
+                            backgroundColor: color,
+                            borderColor: color,
+                            extendedProps: e
+                        };
+
+                    });
 
                     successCallback(eventos);
 
@@ -62,6 +93,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.log("ERROR JSON:", err);
                     failureCallback(err);
                 });
+
+        },
+
+        eventClick: function(info) {
+
+            const e = info.event.extendedProps;
+
+            alert(
+                "CLIENTE: " + e.cliente + "\n" +
+                "SERVICIO: " + e.servicio + "\n" +
+                "LUGAR: " + e.lugar + "\n" +
+                "PACK: " + e.pack + "\n" +
+                "HORA: " + e.hora + "\n\n" +
+                "DESCRIPCIÓN:\n" + e.descripcion
+            );
 
         }
 
