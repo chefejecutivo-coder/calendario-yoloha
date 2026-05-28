@@ -28,6 +28,14 @@ body{
     padding:15px;
     border-radius:12px;
 }
+
+/* 🔥 FORZAR COLORES VISUALES */
+.fc-event {
+    border: none !important;
+    color: white !important;
+    font-weight: bold;
+    padding: 2px;
+}
 </style>
 
 </head>
@@ -53,6 +61,8 @@ document.addEventListener('DOMContentLoaded', function () {
             center: 'title',
             right: 'dayGridMonth'
         },
+
+        eventDisplay: 'block', // 🔥 IMPORTANTE para color sólido
 
         events: function(fetchInfo, successCallback, failureCallback) {
 
@@ -81,6 +91,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             start: e.date,
                             backgroundColor: color,
                             borderColor: color,
+                            textColor: "#ffffff", // 🔥 fuerza contraste
                             extendedProps: e
                         };
 
