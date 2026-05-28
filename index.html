@@ -2,121 +2,52 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>YOLOHA GO - CALENDARIO</title>
+<title>Calendario YOLOHA</title>
 
-<!-- FullCalendar -->
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
 <style>
-body{
-    margin:0;
-    font-family:Arial;
-    background:#eef2f7;
-    padding:20px;
-}
-
-.topbar{
-    background:#111827;
-    color:white;
-    padding:15px;
-    border-radius:12px;
-    margin-bottom:15px;
-}
-
-#calendar{
-    background:white;
-    padding:15px;
-    border-radius:12px;
-}
+body{font-family:Arial;margin:0;padding:20px;background:#f3f4f6;}
+#calendar{background:white;padding:15px;border-radius:10px;}
 </style>
-
 </head>
 
 <body>
 
-<div class="topbar">
-    <h2>YOLOHA GO - CALENDARIO OPERATIVO</h2>
-</div>
-
+<h2>Calendario YOLOHA</h2>
 <div id="calendar"></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    var calendarEl = document.getElementById('calendar');
+  var calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
 
-    var calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
 
-        initialView: 'dayGridMonth',
-        locale: 'es',
-        height: 'auto',
+    events: function(info, successCallback, failureCallback) {
 
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth'
-        },
+      fetch('./events.json')
+        .then(r => r.json())
+        .then(data => {
 
-        events: function(fetchInfo, successCallback, failureCallback) {
+          let eventos = data.map(e => ({
+            title: e.cliente + " - " + e.servicio,
+            start: e.date
+          }));
 
-            fetch('./events.json')
-                .then(res => res.json())
-                .then(data => {
+          successCallback(eventos);
 
-                    let eventos = data.map(item => {
+        })
+        .catch(err => {
+          console.log(err);
+          failureCallback(err);
+        });
 
-                        let servicio = (item.servicio || "").toUpperCase().trim();
+    }
 
-                        let color = "#6c757d";
+  });
 
-                        if (servicio.includes("REFRIGERIO")) color = "#0d6efd";
-                        else if (servicio.includes("ALMUERZO")) color = "#198754";
-                        else if (servicio.includes("CENA")) color = "#6f42c1";
-                        else if (servicio.includes("PASABOCAS")) color = "#fd7e14";
-                        else if (servicio.includes("DESAYUNO")) color = "#20c997";
-                        else if (servicio.includes("TARDE JUEGOS")) color = "#ffc107";
-
-                        let pack = parseInt(item.pack || 0);
-                        if (pack >= 100) color = "#dc3545";
-
-                        return {
-                            title: item.cliente + " - " + item.servicio,
-                            start: item.date,
-                            backgroundColor: color,
-                            borderColor: color,
-                            extendedProps: item
-                        };
-
-                    });
-
-                    console.log("EVENTOS CARGADOS:", eventos);
-                    successCallback(eventos);
-                })
-                .catch(err => {
-                    console.log("ERROR JSON:", err);
-                    failureCallback(err);
-                });
-
-        },
-
-        eventClick: function(info) {
-
-            let e = info.event.extendedProps;
-
-            alert(
-                "CLIENTE: " + e.cliente + "\n" +
-                "SERVICIO: " + e.servicio + "\n" +
-                "LUGAR: " + e.lugar + "\n" +
-                "PAX: " + e.pack + "\n" +
-                "HORA: " + e.hora + "\n\n" +
-                "DESCRIPCIÓN:\n" + e.descripcion
-            );
-        }
-
-    });
-
-    calendar.render();
+  calendar.render();
 
 });
 </script>
