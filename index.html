@@ -1,31 +1,226 @@
-let eventos = data.map(item => {
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>CALENDARIO YOLOHA GO</title>
 
-    // 🔥 LIMPIEZA FUERTE DEL TEXTO
-    let servicio = (item.servicio || "")
-        .toString()
-        .toUpperCase()
-        .replace(/\|/g, "")
-        .trim();
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
-    let color = "#6c757d"; // gris por defecto (para detectar errores)
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    // 🔵 REGLAS DE COLORES
-    if (servicio.includes("REFRIGERIO")) color = "#0d6efd";
-    else if (servicio.includes("ALMUERZO")) color = "#198754";
-    else if (servicio.includes("CENA")) color = "#6f42c1";
-    else if (servicio.includes("PASABOCAS")) color = "#fd7e14";
-    else if (servicio.includes("DESAYUNO")) color = "#20c997";
-    else if (servicio.includes("TARDE JUEGOS")) color = "#ffc107";
+<style>
+body{
+    font-family: Arial;
+    background:#eef2f7;
+    margin:0;
+    padding:20px;
+}
 
-    // 🔴 EVENTOS GRANDES
-    let pack = parseInt(item.pack || 0);
-    if (pack >= 100) color = "#dc3545";
+.topbar{
+    text-align:center;
+    margin-bottom:10px;
+}
 
-    return {
-        title: item.cliente + " - " + item.servicio,
-        start: item.date,
-        backgroundColor: color,
-        borderColor: color,
-        extendedProps: item
-    };
+#calendar{
+    max-width:1100px;
+    margin:auto;
+    background:white;
+    padding:15px;
+    border-radius:12px;
+}
+
+/* filtros */
+.filtros{
+    max-width:1100px;
+    margin:auto;
+    margin-bottom:10px;
+    display:grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="topbar">
+    <h2>YOLOHA GO - CALENDARIO OPERATIVO</h2>
+</div>
+
+<!-- FILTROS -->
+<div class="filtros">
+
+    <input type="text" id="filtroCliente" class="form-control" placeholder="Buscar cliente">
+
+    <select id="filtroServicio" class="form-control">
+        <option value="">Todos los servicios</option>
+    </select>
+
+    <select id="filtroPax" class="form-control">
+        <option value="">Todos los PAX</option>
+        <option value="0-50">0-50</option>
+        <option value="51-100">51-100</option>
+        <option value="101-200">101-200</option>
+        <option value="200+">200+</option>
+    </select>
+
+    <button class="btn btn-secondary" onclick="limpiarFiltros()">Limpiar</button>
+
+</div>
+
+<div id="calendar"></div>
+
+<!-- MODAL -->
+<div class="modal fade" id="eventoModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Detalle del Evento</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body" id="modalBody"></div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+
+let calendar;
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    let calendarEl = document.getElementById('calendar');
+
+    calendar = new FullCalendar.Calendar(calendarEl, {
+
+        initialView: 'dayGridMonth',
+        locale: 'es',
+
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth'
+        },
+
+        events: function(fetchInfo, successCallback, failureCallback) {
+
+            fetch('./events.json')
+                .then(r => r.json())
+                .then(data => {
+
+                    // llenar filtro servicios automáticamente
+                    let serviciosSet = new Set();
+
+                    let eventos = data.map(item => {
+
+                        let servicio = (item.servicio || "")
+                            .toString()
+                            .toUpperCase()
+                            .replace(/\|/g,'');
+
+                        serviciosSet.add(servicio);
+
+                        let color = "#6c757d";
+
+                        if (servicio.includes("REFRIGERIO")) color = "#0d6efd";
+                        else if (servicio.includes("ALMUERZO")) color = "#198754";
+                        else if (servicio.includes("CENA")) color = "#6f42c1";
+                        else if (servicio.includes("PASABOCAS")) color = "#fd7e14";
+                        else if (servicio.includes("TARDE JUEGOS")) color = "#ffc107";
+
+                        let pack = parseInt(item.pack || 0);
+                        if (pack >= 100) color = "#dc3545";
+
+                        return {
+                            title: item.cliente + " - " + item.servicio,
+                            start: item.date,
+                            backgroundColor: color,
+                            borderColor: color,
+                            extendedProps: item
+                        };
+                    });
+
+                    // cargar servicios en filtro
+                    let select = document.getElementById("filtroServicio");
+                    select.innerHTML = `<option value="">Todos los servicios</option>`;
+                    serviciosSet.forEach(s => {
+                        select.innerHTML += `<option value="${s}">${s}</option>`;
+                    });
+
+                    successCallback(eventos);
+                })
+                .catch(err => console.log(err));
+        },
+
+        eventClick: function(info) {
+
+            let e = info.event.extendedProps;
+
+            document.getElementById("modalBody").innerHTML = `
+                <h4>${e.cliente}</h4>
+                <p><b>Servicio:</b> ${e.servicio}</p>
+                <p><b>Lugar:</b> ${e.lugar}</p>
+                <p><b>PAX:</b> ${e.pack}</p>
+                <p><b>Hora:</b> ${e.hora}</p>
+                <hr>
+                <p>${e.descripcion}</p>
+                <hr>
+                <p>${e.observaciones || ''}</p>
+            `;
+
+            new bootstrap.Modal(document.getElementById('eventoModal')).show();
+        }
+
+    });
+
+    calendar.render();
+
+    // listeners filtros
+    document.getElementById("filtroCliente").addEventListener("input", aplicarFiltros);
+    document.getElementById("filtroServicio").addEventListener("change", aplicarFiltros);
+    document.getElementById("filtroPax").addEventListener("change", aplicarFiltros);
 });
+
+function aplicarFiltros() {
+
+    let cliente = document.getElementById("filtroCliente").value.toLowerCase();
+    let servicio = document.getElementById("filtroServicio").value;
+    let pax = document.getElementById("filtroPax").value;
+
+    calendar.getEvents().forEach(event => {
+
+        let e = event.extendedProps;
+
+        let mostrar = true;
+
+        let p = parseInt(e.pack || 0);
+
+        if (cliente && !e.cliente.toLowerCase().includes(cliente)) mostrar = false;
+
+        if (servicio && e.servicio.toUpperCase() !== servicio) mostrar = false;
+
+        if (pax === "0-50" && !(p <= 50)) mostrar = false;
+        if (pax === "51-100" && !(p >= 51 && p <= 100)) mostrar = false;
+        if (pax === "101-200" && !(p >= 101 && p <= 200)) mostrar = false;
+        if (pax === "200+" && !(p >= 200)) mostrar = false;
+
+        event.setProp("display", mostrar ? "auto" : "none");
+    });
+}
+
+function limpiarFiltros() {
+    document.getElementById("filtroCliente").value = "";
+    document.getElementById("filtroServicio").value = "";
+    document.getElementById("filtroPax").value = "";
+    aplicarFiltros();
+}
+
+</script>
+
+</body>
+</html>
