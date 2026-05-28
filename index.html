@@ -1,154 +1,31 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>CALENDARIO YOLOHA GO</title>
+let eventos = data.map(item => {
 
-<!-- FullCalendar -->
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    // 🔥 LIMPIEZA FUERTE DEL TEXTO
+    let servicio = (item.servicio || "")
+        .toString()
+        .toUpperCase()
+        .replace(/\|/g, "")
+        .trim();
 
-<!-- Bootstrap -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    let color = "#6c757d"; // gris por defecto (para detectar errores)
 
-<style>
-body{
-    font-family: Arial;
-    background:#eef2f7;
-    margin:0;
-    padding:20px;
-}
+    // 🔵 REGLAS DE COLORES
+    if (servicio.includes("REFRIGERIO")) color = "#0d6efd";
+    else if (servicio.includes("ALMUERZO")) color = "#198754";
+    else if (servicio.includes("CENA")) color = "#6f42c1";
+    else if (servicio.includes("PASABOCAS")) color = "#fd7e14";
+    else if (servicio.includes("DESAYUNO")) color = "#20c997";
+    else if (servicio.includes("TARDE JUEGOS")) color = "#ffc107";
 
-#calendar{
-    max-width: 1100px;
-    margin: auto;
-    background:white;
-    padding:15px;
-    border-radius:12px;
-}
+    // 🔴 EVENTOS GRANDES
+    let pack = parseInt(item.pack || 0);
+    if (pack >= 100) color = "#dc3545";
 
-.topbar{
-    text-align:center;
-    margin-bottom:15px;
-}
-</style>
-
-</head>
-
-<body>
-
-<div class="topbar">
-    <h2>YOLOHA GO - CALENDARIO OPERATIVO</h2>
-</div>
-
-<div id="calendar"></div>
-
-<!-- MODAL -->
-<div class="modal fade" id="eventoModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5 class="modal-title">Detalle del Evento</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body" id="modalBody"></div>
-
-    </div>
-  </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    var calendarEl = document.getElementById('calendar');
-
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-
-        initialView: 'dayGridMonth',
-        locale: 'es',
-
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth'
-        },
-
-        // 🔥 CONEXIÓN CON TU JSON EN GITHUB
-        events: function(fetchInfo, successCallback, failureCallback) {
-
-            fetch('./events.json')
-                .then(response => response.json())
-                .then(data => {
-
-                    let eventos = data.map(item => {
-
-                        let color = "#198754"; // verde base
-
-                        let servicio = (item.servicio || "").toUpperCase();
-
-                        if (servicio.includes("REFRIGERIO")) color = "#0d6efd";
-                        else if (servicio.includes("ALMUERZO")) color = "#198754";
-                        else if (servicio.includes("CENA")) color = "#6f42c1";
-                        else if (servicio.includes("PASABOCAS")) color = "#fd7e14";
-                        else if (servicio.includes("DESAYUNO")) color = "#20c997";
-
-                        if (parseInt(item.pack || 0) >= 100) color = "#dc3545";
-
-                        return {
-                            title: item.cliente + " - " + item.servicio,
-                            start: item.date,
-                            backgroundColor: color,
-                            borderColor: color,
-                            extendedProps: item
-                        };
-                    });
-
-                    successCallback(eventos);
-                })
-                .catch(error => {
-                    console.log("ERROR JSON:", error);
-                    failureCallback(error);
-                });
-        },
-
-        // 👇 CLICK EVENTO (MODAL TIPO APP)
-        eventClick: function(info) {
-
-            let e = info.event.extendedProps;
-
-            let html = `
-                <div>
-                    <h4>${e.cliente}</h4>
-
-                    <p><b>Servicio:</b> ${e.servicio}</p>
-                    <p><b>Lugar:</b> ${e.lugar}</p>
-                    <p><b>PAX:</b> ${e.pack}</p>
-                    <p><b>Hora:</b> ${e.hora}</p>
-
-                    <hr>
-
-                    <p><b>Descripción:</b><br>${e.descripcion}</p>
-
-                    <hr>
-
-                    <p><b>Observaciones:</b><br>${e.observaciones || ''}</p>
-                </div>
-            `;
-
-            document.getElementById('modalBody').innerHTML = html;
-
-            let modal = new bootstrap.Modal(document.getElementById('eventoModal'));
-            modal.show();
-        }
-
-    });
-
-    calendar.render();
-
+    return {
+        title: item.cliente + " - " + item.servicio,
+        start: item.date,
+        backgroundColor: color,
+        borderColor: color,
+        extendedProps: item
+    };
 });
-</script>
-
-</body>
-</html>
