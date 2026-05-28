@@ -62,52 +62,40 @@ document.addEventListener('DOMContentLoaded', function () {
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
 
-        // 👇 AQUÍ ESTÁ LA CONEXIÓN CON TU JSON
+        // ✅ CARGA CORRECTA DEL JSON
         events: function(fetchInfo, successCallback, failureCallback) {
-
-    fetch('./events.json')
-        .then(response => response.json())
-        .then(data => {
-
-            let eventos = data.map(item => {
-
-                return {
-                    title: item.cliente + " - " + item.servicio,
-                    start: item.date
-                };
-
-            });
-
-            console.log("EVENTOS CARGADOS:", eventos);
-
-            successCallback(eventos);
-        })
-        .catch(error => {
-            console.log("ERROR JSON:", error);
-            failureCallback(error);
-        });
-
-} {
 
             fetch('./events.json')
                 .then(response => response.json())
                 .then(data => {
 
-                    // convertir tu JSON al formato FullCalendar
-                    let eventos = data.map(e => ({
-                        title: e.cliente + " - " + e.servicio,
-                        start: e.date,
-                        extendedProps: e
-                    }));
+                    console.log("JSON CARGADO:", data);
+
+                    let eventos = [];
+
+                    for (let i = 0; i < data.length; i++) {
+
+                        eventos.push({
+                            title: (data[i].cliente || "Sin cliente") + " - " + (data[i].servicio || ""),
+                            start: data[i].date,
+                            extendedProps: data[i]
+                        });
+
+                    }
+
+                    console.log("EVENTOS PROCESADOS:", eventos);
 
                     successCallback(eventos);
+
                 })
                 .catch(error => {
-                    console.log("Error cargando JSON:", error);
+                    console.log("ERROR JSON:", error);
                     failureCallback(error);
                 });
+
         },
 
+        // 👇 CLICK EN EVENTO
         eventClick: function(info) {
 
             let e = info.event.extendedProps;
@@ -116,6 +104,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 "CLIENTE: " + e.cliente + "\n" +
                 "SERVICIO: " + e.servicio + "\n" +
                 "LUGAR: " + e.lugar + "\n" +
+                "PAX: " + e.pack + "\n" +
                 "HORA: " + e.hora + "\n\n" +
                 "DESCRIPCIÓN: " + e.descripcion
             );
