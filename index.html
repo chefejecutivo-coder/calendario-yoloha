@@ -15,12 +15,9 @@ body{
     padding:20px;
 }
 
-.topbar{
-    background:#111827;
-    color:white;
-    padding:15px;
-    border-radius:12px;
-    margin-bottom:15px;
+h2{
+    text-align:center;
+    margin-bottom:20px;
 }
 
 #calendar{
@@ -29,11 +26,11 @@ body{
     border-radius:12px;
 }
 
-/* 🔥 FORZAR COLORES VISUALES */
+/* 🔥 ASEGURA COLORES VISIBLES */
 .fc-event {
-    border: none !important;
     color: white !important;
     font-weight: bold;
+    border: none !important;
     padding: 2px;
 }
 </style>
@@ -42,9 +39,7 @@ body{
 
 <body>
 
-<div class="topbar">
-    <h2>YOLOHA GO - CALENDARIO OPERATIVO</h2>
-</div>
+<h2>YOLOHA GO - CALENDARIO OPERATIVO</h2>
 
 <div id="calendar"></div>
 
@@ -59,10 +54,8 @@ document.addEventListener('DOMContentLoaded', function () {
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth'
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
-
-        eventDisplay: 'block', // 🔥 IMPORTANTE para color sólido
 
         events: function(fetchInfo, successCallback, failureCallback) {
 
@@ -70,12 +63,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(r => r.json())
                 .then(data => {
 
-                    const eventos = data.map(e => {
+                    const eventos = data.map(item => {
 
-                        let servicio = (e.servicio || "").toUpperCase().trim();
+                        // 🔥 LIMPIEZA SERVICIO
+                        let servicio = (item.servicio || '')
+                            .toString()
+                            .toUpperCase()
+                            .replace(/\|/g, '')
+                            .trim();
 
-                        let color = "#6c757d";
+                        let color = "#6c757d"; // default gris
 
+                        // 🎨 REGLAS DE COLORES
                         if (servicio.includes("REFRIGERIO")) color = "#0d6efd";
                         else if (servicio.includes("ALMUERZO")) color = "#198754";
                         else if (servicio.includes("CENA")) color = "#6f42c1";
@@ -83,22 +82,22 @@ document.addEventListener('DOMContentLoaded', function () {
                         else if (servicio.includes("DESAYUNO")) color = "#20c997";
                         else if (servicio.includes("TARDE JUEGOS")) color = "#ffc107";
 
-                        let pack = parseInt(e.pack || 0);
+                        // 🔴 PRIORIDAD POR PAX
+                        let pack = parseInt(item.pack || 0);
                         if (pack >= 100) color = "#dc3545";
 
                         return {
-                            title: (e.cliente || '') + " - " + (e.servicio || ''),
-                            start: e.date,
+                            title: (item.cliente || '') + " - " + servicio,
+                            start: item.date,
+
                             backgroundColor: color,
                             borderColor: color,
-                            textColor: "#ffffff", // 🔥 fuerza contraste
-                            extendedProps: e
-                        };
 
+                            extendedProps: item
+                        };
                     });
 
                     successCallback(eventos);
-
                 })
                 .catch(err => {
                     console.log("ERROR JSON:", err);
@@ -108,18 +107,16 @@ document.addEventListener('DOMContentLoaded', function () {
         },
 
         eventClick: function(info) {
-
             const e = info.event.extendedProps;
 
             alert(
                 "CLIENTE: " + e.cliente + "\n" +
                 "SERVICIO: " + e.servicio + "\n" +
                 "LUGAR: " + e.lugar + "\n" +
-                "PACK: " + e.pack + "\n" +
+                "PAX: " + e.pack + "\n" +
                 "HORA: " + e.hora + "\n\n" +
-                "DESCRIPCIÓN:\n" + e.descripcion
+                "DESCRIPCIÓN: " + e.descripcion
             );
-
         }
 
     });
